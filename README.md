@@ -14,4 +14,4 @@ Because the Mojo-IDE only supports Verilog or Lucid projects I'm generating ever
 For the eventual CAD design I plan on using FreeCAD to create models which I'll print with my own Prusa-i3 clone.
 
 ## License
-Mugato  is currently licensed under the terms of both the MIT license and the Apache License (Version 2.0). 
+Mugato  is currently licensed under the terms of both the MIT license and the Apache License (Version 2.0). See LICENSE-MIT and LICENSE-APACHE for more details.
