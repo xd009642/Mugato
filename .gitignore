@@ -3,9 +3,12 @@
 *.bit
 *.bin
 *.bld
+*.cmd
 *.cmd_log
 *.drc
+*.exe
 *.ll
+*.log
 *.lso
 *.msd
 *.msk
@@ -42,6 +45,7 @@
 *_summary.xml
 *_usage.xml
 *_xst.xrpt
+fuse.xmsgs
 
 # iMPACT generated files
 _impactbatch.log
@@ -59,8 +63,10 @@ par_usage_statistics.html
 usage_statistics_webtalk.html
 webtalk.log
 webtalk_pn.xml
+planAhead*
 
 # generated folders
+isim/
 iseconfig/
 xlnx_auto_0_xdb/
 xst/
