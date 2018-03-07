@@ -52,14 +52,14 @@ architecture RTL of avr_interface is
 
 	signal ready			: std_logic;
 	signal n_rdy			: std_logic;
-	signal spi_done			: std_logic;
-	signal spi_dout			: std_logic_vector(7 downto 0);
+	signal spi_done		: std_logic;
+	signal spi_dout		: std_logic_vector(7 downto 0);
 	signal tx_m				: std_logic;
 	signal spi_miso_m		: std_logic;
 	signal spi_miso_en_m	: std_logic;
 
 	signal byte_ct_d, byte_ct_q					: std_logic;
-	signal sample_d, sample_q					: std_logic_vector(9 downto 0);
+	signal sample_d, sample_q						: std_logic_vector(9 downto 0);
 	signal new_sample_d, new_sample_q			: std_logic;
 	signal sample_channel_d, sample_channel_q	: std_logic_vector(3 downto 0);
 	

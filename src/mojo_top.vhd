@@ -22,7 +22,8 @@ entity mojo_top is
 		spi_channel : out std_logic_vector(3 downto 0);  -- analog read channel (input to AVR service task)
 		avr_tx      : in  std_logic;		-- serial data transmited from AVR/USB (FPGA recieve)
 		avr_rx      : out std_logic;		-- serial data for AVR/USB to receive (FPGA transmit)
-		avr_rx_busy : in  std_logic			-- AVR/USB buffer full (don't send data when true)
+		avr_rx_busy : in  std_logic;			-- AVR/USB buffer full (don't send data when true)
+		audio       : out std_logic_vector(15 downto 0) -- Assuming 16 bit audio for now
 	);
 end mojo_top;
 
@@ -59,7 +60,12 @@ rst	<= NOT rst_n;						-- generate non-inverted reset signal from rst_n button
 --spi_miso <= 'Z';						-- keep AVR output lines high-Z
 --avr_rx <= 'Z';						-- keep AVR output lines high-Z
 --spi_channel <= "ZZZZ";				-- keep AVR output lines high-Z
-
+audio_output: entity work.audio_interface 
+	port map (
+		clk 			=> clk,
+		rst			=> rst,
+		amplitude 	=> audio
+	);
 -- instantiate the avr_interface (to handle USB UART and analog sampling, etc.)
 avr_interface : entity work.avr_interface
 	port map (
