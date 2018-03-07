@@ -1,0 +1,9 @@
+dist: trusty
+sudo: required
+addons:
+  apt:
+    packages:
+    - ghdl
+
+script:
+- ghdl -c tests/test_driver.vhd  src/audio_interface.vhd -r test_driver

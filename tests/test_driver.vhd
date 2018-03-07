@@ -51,13 +51,13 @@ ARCHITECTURE behavior OF test_driver IS
    --Inputs
    signal clk : std_logic := '0';
    signal rst : std_logic := '0';
-
+	
  	--Outputs
    signal amplitude : std_logic_vector(15 downto 0);
 
    -- Clock period definitions
    constant clk_period : time := 10 ns;
- 
+	signal done : std_logic := '0';
 BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
@@ -70,10 +70,12 @@ BEGIN
    -- Clock process definitions
    clk_process :process
    begin
-		clk <= '0';
-		wait for clk_period/2;
-		clk <= '1';
-		wait for clk_period/2;
+		if done = '0' then
+			clk <= '0';
+			wait for clk_period/2;
+			clk <= '1';
+			wait for clk_period/2;
+		end if;
    end process;
  
 
@@ -88,7 +90,7 @@ BEGIN
 
       -- insert stimulus here 
 
-      wait;
+      done <= '1';
    end process;
 
 END;
