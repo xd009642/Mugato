@@ -7,4 +7,6 @@ addons:
 script:
 - wget https://github.com/ghdl/ghdl/releases/download/v0.35/ghdl-0.35-llvm-3.8-ubuntu14.tgz
 - tar xzf ghdl-0.35-llvm-3.8-ubuntu14.tgz
-- ./ghdl-0.35-llvm-3.8-ubuntu14/bin/ghdl -c tests/test_driver.vhd  src/audio_interface.vhd -r test_driver
+- export PATH=$PWD/ghdl-0.35-llvm-3.8-ubuntu14/bin:$PATH
+- ghdl -c tests/test_driver.vhd  src/audio_interface.vhd -r test_driver
+
