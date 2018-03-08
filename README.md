@@ -31,13 +31,14 @@ To run in ISE sim and get a vcd file use the following tcl commands
 vcd dumpfile <FILENAME>.vcd
 vcd dumpvars -m /
 vcd dumpon
-run
+run <TIME>
 vcd dumpoff
 vcd dumpflush
 ```
 
-You can optionally specify a time after run if you only want to see a subset of
-the simulation.
+You should specify a time, mugato doesn't use a failure to exit tests as this
+prevents travis from correctly recognising test failures. Therefore without
+a time the test will run indefinitely.
 
 It's my eventual aim to make checkers in the testbench and then make use of
 travis to automate the testing of IP blocks as GHDL takes an age to run on my
