@@ -29,6 +29,8 @@
 *.twx
 *.unroutes
 *.ut
+*.wdb
+*.ini
 *.xpi
 *.xst
 *_bitgen.xwbt

@@ -41,56 +41,50 @@ ARCHITECTURE behavior OF test_driver IS
  
     COMPONENT audio_interface
     PORT(
-         clk : IN  std_logic;
-         rst : IN  std_logic;
-         amplitude : OUT  std_logic_vector(15 downto 0)
-        );
+        clk : IN  std_logic;
+        rst : IN  std_logic;
+        amplitude : OUT  std_logic_vector(15 downto 0)
+    );
     END COMPONENT;
     
 
-   --Inputs
-   signal clk : std_logic := '0';
-   signal rst : std_logic := '0';
-	
- 	--Outputs
-   signal amplitude : std_logic_vector(15 downto 0);
+    --Inputs
+    signal clk : std_logic := '0';
+    signal rst : std_logic := '0';
+        
+    --Outputs
+    signal amplitude : std_logic_vector(15 downto 0);
 
-   -- Clock period definitions
-   constant clk_period : time := 10 ns;
-	signal done : std_logic := '0';
+    -- Clock period definitions
+    constant clk_period : time := 10 ns;
+    signal done : std_logic := '0';
 BEGIN
  
-	-- Instantiate the Unit Under Test (UUT)
-   uut: audio_interface PORT MAP (
-          clk => clk,
-          rst => rst,
-          amplitude => amplitude
-        );
+        -- Instantiate the Unit Under Test (UUT)
+    uut: audio_interface PORT MAP (
+        clk => clk,
+        rst => rst,
+        amplitude => amplitude
+    );
 
-   -- Clock process definitions
-   clk_process :process
-   begin
-		if done = '0' then
-			clk <= '0';
-			wait for clk_period/2;
-			clk <= '1';
-			wait for clk_period/2;
-		end if;
-   end process;
+    -- Clock process definitions
+    clk_process :process
+    begin
+        clk <= '0';
+        wait for clk_period/2;
+        clk <= '1';
+        wait for clk_period/2;
+    end process;
  
 
-   -- Stimulus process
-   stim_proc: process
-   begin		
-      -- hold reset state for 100 ns.
-		rst <= '1';
-      wait for 100 ns;	
-		rst <= '0';
-      wait for clk_period*10;
-
-      -- insert stimulus here 
-
-      done <= '1';
-   end process;
+    -- Stimulus process
+    stim_proc: process
+    begin                
+        -- hold reset state for 100 ns.
+        rst <= '1';
+        wait for 100 ns;  
+        rst <= '0';
+        wait for clk_period*10;
+    end process;
 
 END;

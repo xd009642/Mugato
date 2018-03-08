@@ -21,9 +21,24 @@ print with my own Prusa-i3 clone.
 
 Debugging the synthesiser via simulation is harder than it would be if I paid
 for tools such as Questa, or were using a Vivado compatible chip. For debugging
-I'm going to attempt to use GHDL to run my VHDL test benches and output nice
-waveforms I can view in GtkWave. I did try ISE sim but the inability to show
-vectors as analog signals makes debugging waveform synthesis a lot harder.
+I'm going to attempt to use GHDL to run my VHDL test benches. For development,
+and viewing waves I'll use ISE and dump the output to a vcd file I can then view
+in gtkwave as analog signals.
+
+To run in ISE sim and get a vcd file use the following tcl commands
+
+```
+vcd dumpfile <FILENAME>.vcd
+vcd dumpvars -m /
+vcd dumpon
+run <TIME>
+vcd dumpoff
+vcd dumpflush
+```
+
+You should specify a time, mugato doesn't use a failure to exit tests as this
+prevents travis from correctly recognising test failures. Therefore without
+a time the test will run indefinitely.
 
 It's my eventual aim to make checkers in the testbench and then make use of
 travis to automate the testing of IP blocks as GHDL takes an age to run on my
