@@ -7,10 +7,9 @@ addons:
 script:
 - wget https://github.com/ghdl/ghdl/releases/download/v0.35/ghdl-0.35-llvm-3.8-ubuntu14.tgz
 - tar xzf ghdl-0.35-llvm-3.8-ubuntu14.tgz
-- ls
 - export PATH=$PWD/bin:$PATH
-- ghdl --help
 - ghdl -i tests/test_driver.vhd  src/audio_interface.vhd 
-- ghdl --gen-makefile test_driver | tee makefile
-- make run
+- ghdl --gen-makefile test_driver > makefile
+- make
+- ghdl -r test_driver --stop-time=200ns
 
