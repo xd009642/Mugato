@@ -89,8 +89,8 @@ BEGIN
       wait for clk_period*10;
 
       -- insert stimulus here 
-
       done <= '1';
+	  report "Test finished" severity failure;
    end process;
 
 END;
