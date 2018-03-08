@@ -1,4 +1,5 @@
 # Mugato
+[![Build Status](https://travis-ci.org/xd009642/Mugato.svg?branch=master)](https://travis-ci.org/xd009642/Mugato)
 ## Intro
 Mugato is my attempt at making a small hardware synthesiser using a
 [Mojo-V3](https://embeddedmicro.com/products/mojo-v3). Mugato named after an
