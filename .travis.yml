@@ -9,5 +9,6 @@ script:
 - tar xzf ghdl-0.35-llvm-3.8-ubuntu14.tgz
 - ls
 - export PATH=$PWD/bin:$PATH
+- ghdl --help
 - ghdl -c tests/test_driver.vhd  src/audio_interface.vhd -r test_driver
 
