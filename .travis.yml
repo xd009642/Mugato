@@ -10,5 +10,7 @@ script:
 - ls
 - export PATH=$PWD/bin:$PATH
 - ghdl --help
-- ghdl -c tests/test_driver.vhd  src/audio_interface.vhd -r test_driver
+- ghdl -i tests/test_driver.vhd  src/audio_interface.vhd 
+- ghdl --gen-makefile test_driver | tee makefile
+- make run
 
