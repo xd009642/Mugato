@@ -37,6 +37,7 @@ entity nc_osc is
         clk         : in std_logic;
         rst         : in std_logic;
         phase_in    : in std_logic_vector (pcw_width downto 0);
+        phase_offset: in std_logic_vector (pcw_width downto 0);
         phase_out   : out  std_logic_vector (pcw_width downto 0) 
     );
 end nc_osc;
@@ -50,7 +51,7 @@ begin
             phase_buffer <= (others => '0');
         elsif rising_edge(clk) then
             phase_buffer <= std_logic_vector(unsigned(phase_in) + unsigned(phase_buffer));
-            phase_out <= phase_buffer;
+            phase_out <= std_logic_vector(unsigned(phase_buffer) + unsigned(phase_offset));
         end if;
     end process update;
     
