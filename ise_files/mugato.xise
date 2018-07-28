@@ -65,6 +65,10 @@
       <association xil_pn:name="PostRouteSimulation" xil_pn:seqID="75"/>
       <association xil_pn:name="PostTranslateSimulation" xil_pn:seqID="75"/>
     </file>
+    <file xil_pn:name="../src/sine_lut.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="78"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="78"/>
+    </file>
   </files>
 
   <properties>

@@ -18,6 +18,13 @@ everything in ISE and using
 For the eventual CAD design I plan on using FreeCAD to create models which I'll
 print with my own Prusa-i3 clone.
 
+## Coregen
+
+Some cores such as the CORDIC processor are fiddly to write and difficult to
+write in a reconfigurable way. To this end there are some coregen scripts. These
+are written in python 3 and make use of the myhdl python library to generate
+the VHDL.
+
 ## Debugging & Testing
 
 Debugging the synthesiser via simulation is harder than it would be if I paid

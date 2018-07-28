@@ -34,7 +34,8 @@ USE ieee.std_logic_1164.ALL;
  
 ENTITY nco_test IS
 END nco_test;
- 
+ENTITY cordic IS
+END cordic;
 ARCHITECTURE behavior OF nco_test IS 
  
     -- Component Declaration for the Unit Under Test (UUT)
@@ -72,7 +73,10 @@ BEGIN
           phase_offset => phase_offset,
           phase_out => phase_out
         );
-
+   sin: cordic PORT MAP (
+          clk => clk,
+		  rst => rst
+        );
    -- Clock process definitions
    clk_process :process
    begin
