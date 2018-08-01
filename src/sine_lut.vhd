@@ -30,10 +30,10 @@ use IEEE.STD_LOGIC_1164.ALL;
 --use UNISIM.VComponents.all;
 
 entity sine_lut is
-    Port ( phase : in  STD_LOGIC_VECTOR (7 downto 0);
+    Port ( phase : in  STD_LOGIC_VECTOR (14 downto 0);
            clk : in  STD_LOGIC;
 		   rst : in  std_logic;
-           amplitude : out  STD_LOGIC_VECTOR (15 downto 0));
+           amplitude : out  STD_LOGIC_VECTOR (14 downto 0));
 end sine_lut;
 
 architecture Behavioral of sine_lut is

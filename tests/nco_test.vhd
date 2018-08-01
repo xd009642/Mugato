@@ -27,7 +27,7 @@
 --------------------------------------------------------------------------------
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
- 
+use IEEE.numeric_std.all;
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
@@ -40,22 +40,21 @@ ARCHITECTURE behavior OF nco_test IS
  
     -- Component Declaration for the Unit Under Test (UUT)
  
-    COMPONENT nc_osc
-    PORT(
-         clk : IN  std_logic;
-         rst : IN  std_logic;
-         phase_in : IN  std_logic_vector(7 downto 0);
-         phase_offset : IN  std_logic_vector(7 downto 0);
-         phase_out : OUT  std_logic_vector(7 downto 0)
-        );
-    END COMPONENT;
-    
-
+    COMPONENT cordic_gen 
+    port (
+        clk: in std_logic;
+        rst: in std_logic;
+        phase: in STD_LOGIC_VECTOR(14 downto 0);
+        start: in std_logic;
+        sinout: out STD_LOGIC_VECTOR(14 downto 0);
+        done: out std_logic
+    );
+	END COMPONENT;
    --Inputs
    signal clk : std_logic := '0';
    signal rst : std_logic := '0';
-   signal phase_in : std_logic_vector(7 downto 0) := "00001111";
-   signal phase_offset : std_logic_vector(7 downto 0) := (others => '0');
+   signal phase_in : std_logic_vector(14 downto 0) := "00001111";
+   signal phase_offset : std_logic_vector(14 downto 0) := (others => '0');
 
  	--Outputs
    signal phase_out : std_logic_vector(7 downto 0);
@@ -64,18 +63,15 @@ ARCHITECTURE behavior OF nco_test IS
    constant clk_period : time := 10 ns;
  
 BEGIN
- 
-	-- Instantiate the Unit Under Test (UUT)
-   uut: nc_osc PORT MAP (
+
+
+   sin: cordic_gen PORT MAP (
           clk => clk,
-          rst => rst,
-          phase_in => phase_in,
-          phase_offset => phase_offset,
-          phase_out => phase_out
-        );
-   sin: cordic PORT MAP (
-          clk => clk,
-		  rst => rst
+		  rst => '1',
+		  done => open,
+		  phase => phase_in,
+		  sinout => phase_out,
+		  start => rst
         );
    -- Clock process definitions
    clk_process :process

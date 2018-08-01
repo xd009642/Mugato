@@ -47,7 +47,7 @@ ARCHITECTURE behavior OF test_driver IS
     );
     END COMPONENT;
     
-
+	
     --Inputs
     signal clk : std_logic := '0';
     signal rst : std_logic := '0';

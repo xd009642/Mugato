@@ -26,9 +26,38 @@ def cordic_gen(clk, rst, phase, start, sinout, done, phasebits, stages):
             x[0] = 0
             p[0] = 0
         elif start == 1:
-            y[0] = 1
-            x[0] = 1
-            p[0] = 1
+            if phase[0:3] == 0:
+                x[0] = 1
+                y[0] = 4
+                p[0] = phase<<1
+            elif phase[0:3] == 1:
+                x[0] = 1
+                y[0] = 4
+                p[0] = (phase-0x10000) <<1
+            elif phase[0:3] == 2:
+                x[0] = 1
+                y[0] = 4
+                p[0] = (phase-0x10000)<<1
+            elif phase[0:3] == 3:
+                x[0] = 1
+                y[0] = 4
+                p[0] = (phase-0x20000)<<1
+            elif phase[0:3] == 4:
+                x[0] = 1
+                y[0] = 4
+                p[0] = (phase-0x20000)<<1
+            elif phase[0:3] == 5:
+                x[0] = 1
+                y[0] = 4
+                p[0] = (phase-0x30000)<<1
+            elif phase[0:3] == 6:
+                x[0] = 1
+                y[0] = 4
+                p[0] = (phase-0x30000)<<1
+            elif phase[0:3] == 7:
+                y[0] = 1
+                x[0] = 1
+                p[0] = phase<<1
             done.next = False
         else:
             for s in range(stages):
