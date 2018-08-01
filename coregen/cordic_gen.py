@@ -4,7 +4,7 @@ from math import atan2, pi
 
 
 @block
-def cordic_gen(clk, rst, phase, sinout, phasebits, stages):
+def cordic_gen(clk, rst, phase, start, sinout, done, phasebits, stages):
 
     phases = [atan2(1, 2**i) for i in range(stages)]
     phases = tuple([int(x * (4.0 * (1<<(phasebits-2)))/(2.0*pi)) for x in phases])
@@ -22,15 +22,23 @@ def cordic_gen(clk, rst, phase, sinout, phasebits, stages):
     @always(clk.posedge)
     def update():
         if rst == 0:
+            y[0] = 0
+            x[0] = 0
+            p[0] = 0
+        elif start == 1:
             y[0] = 1
             x[0] = 1
             p[0] = 1
+            done.next = False
         else:
             for s in range(stages):
                 x[s] = x[s-1] + (y[s-1]>>s) 
                 y[s] = y[s-1] - (x[s-1]>>s)
                 temp_phase = phases[s-1]
                 p[s] = p[s-1] + temp_phase
+
+            done.next=True
+        sinout.next = y[-1]
         
 
     return update
@@ -50,9 +58,11 @@ print(args)
 
 clk = Signal(bool(0))
 rst = ResetSignal(0, active=0, async=True)
+start = Signal(bool(0))
+done = Signal(bool(0))
 phase = Signal(intbv(0)[args.phasebits:])
 sinout = Signal(intbv(0)[args.phasebits:])
 
-concrete_cordic = cordic_gen(clk, rst, phase, sinout, args.phasebits, args.stages)
+concrete_cordic = cordic_gen(clk, rst, phase, start, sinout, done, args.phasebits, args.stages)
 concrete_cordic.convert(hdl='VHDL')
 
