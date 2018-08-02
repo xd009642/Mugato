@@ -21,7 +21,7 @@ def cordic_gen(clk, rst, phase, start, sinout, done, phasebits, stages):
 
     @always(clk.posedge)
     def update():
-        if rst == 0:
+        if rst == 1:
             y[0] = 0
             x[0] = 0
             p[0] = 0
