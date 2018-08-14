@@ -47,12 +47,22 @@ begin
 		clk <= '1';
 		wait for period/2;
 	end process;
+	
+	phase_ramp:process(clk)
+	begin
+		if (rst = '1') then 
+			phase <= (others => '0');
+		elsif rising_edge(clk) and done then
+			phase <= phase + 1;
+			start <= '1';
+		else 
+			start <= '0';
+		end if;
+	end process;
 
     stimuli : process
     begin
-        -- EDIT Adapt initialization as needed
-        phase <= (others => '0');
-        start <= '1';
+        start <= '0';
 
         -- Reset generation
         -- EDIT: Check that rst is really your reset signal

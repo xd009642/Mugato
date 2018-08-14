@@ -3,6 +3,10 @@ from myhdl import *
 from math import atan2, pi
 
 
+@block 
+def cordic_block(clk, rst, x_in, y_in, z_in, x_out, y_out, z_out):
+    pass
+
 @block
 def cordic_gen(clk, rst, phase, start, sinout, done, phasebits, stages):
 
@@ -22,49 +26,49 @@ def cordic_gen(clk, rst, phase, start, sinout, done, phasebits, stages):
     @always(clk.posedge)
     def update():
         if rst == 1:
-            y[0] = 0
-            x[0] = 0
-            p[0] = 0
+            y[0].next = 0
+            x[0].next = 0
+            p[0].next = 0
         elif start == 1:
             if phase[0:3] == 0:
-                x[0] = 1
-                y[0] = 4
-                p[0] = phase<<1
+                x[0].next = phase
+                y[0].next = 0 
+                p[0].next = phase<<1
             elif phase[0:3] == 1:
-                x[0] = 1
-                y[0] = 4
-                p[0] = (phase-0x10000) <<1
+                x[0].next = 0
+                y[0].next = phase
+                p[0].next = (phase-0x10000) <<1
             elif phase[0:3] == 2:
-                x[0] = 1
-                y[0] = 4
-                p[0] = (phase-0x10000)<<1
+                x[0].next = -phase
+                y[0].next = 0
+                p[0].next = (phase-0x10000)<<1
             elif phase[0:3] == 3:
-                x[0] = 1
-                y[0] = 4
-                p[0] = (phase-0x20000)<<1
+                x[0].next = -phase
+                y[0].next = 0
+                p[0].next = (phase-0x20000)<<1
             elif phase[0:3] == 4:
-                x[0] = 1
-                y[0] = 4
-                p[0] = (phase-0x20000)<<1
+                x[0].next = -phase
+                y[0].next = 0
+                p[0].next = (phase-0x20000)<<1
             elif phase[0:3] == 5:
-                x[0] = 1
-                y[0] = 4
-                p[0] = (phase-0x30000)<<1
+                x[0].next = 0
+                y[0].next = -phase
+                p[0].next = (phase-0x30000)<<1
             elif phase[0:3] == 6:
-                x[0] = 1
-                y[0] = 4
-                p[0] = (phase-0x30000)<<1
+                x[0].next = 0
+                y[0].next = -phase
+                p[0].next = (phase-0x30000)<<1
             elif phase[0:3] == 7:
-                y[0] = 1
-                x[0] = 1
-                p[0] = phase<<1
+                y[0].next = phase
+                x[0].next = 0
+                p[0].next = phase<<1
             done.next = False
         else:
             for s in range(stages):
-                x[s] = x[s-1] + (y[s-1]>>s) 
-                y[s] = y[s-1] - (x[s-1]>>s)
+                x[s].next = x[s-1] + (y[s-1]>>s) 
+                y[s].next = y[s-1] - (x[s-1]>>s)
                 temp_phase = phases[s-1]
-                p[s] = p[s-1] + temp_phase
+                p[s].next = p[s-1] + temp_phase
 
             done.next=True
         sinout.next = y[-1]
@@ -93,5 +97,5 @@ phase = Signal(intbv(0)[args.phasebits:])
 sinout = Signal(intbv(0)[args.phasebits:])
 
 concrete_cordic = cordic_gen(clk, rst, phase, start, sinout, done, args.phasebits, args.stages)
-concrete_cordic.convert(hdl='VHDL')
+concrete_cordic.convert(hdl='Verilog')
 
