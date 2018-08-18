@@ -8,17 +8,18 @@ a sci-fi name? Also, it sounds a bit like legato!
 
 ## Development environment
 As the Mojo uses a Xilinx Spartan 6 FPGA I'm using Xilinx's ISE as an IDE. I'm
-also developing this using VHDL instead of Verilog or Lucid, partially because
-of some past experience, partially because I love strong typesystems. 
+also developing this using Verilog. 
 
-Because the Mojo-IDE only supports Verilog or Lucid projects I'm generating
-everything in ISE and using 
+Currently, instead of using the Mojo IDE I'm generating everything in ISE and using 
 [mojo-loader](https://embeddedmicro.com/pages/mojo-loader) to program the board.
 
 For the eventual CAD design I plan on using FreeCAD to create models which I'll
 print with my own Prusa-i3 clone.
 
 ## Debugging & Testing
+
+Ignore the below I'm switching to Verilator! Eventually the scripts folder will
+provide everything needed.
 
 Debugging the synthesiser via simulation is harder than it would be if I paid
 for tools such as Questa, or were using a Vivado compatible chip. For debugging
