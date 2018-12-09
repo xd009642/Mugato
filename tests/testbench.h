@@ -1,3 +1,6 @@
+#ifndef TESTBENCH_H
+#define TESTBENCH_H
+
 #include <verilated_vcd_c.h>
 #include <memory>
 
@@ -18,9 +21,9 @@ namespace tb {
 
         virtual void open_trace(const std::string& filename) {
             if(!trace) {
-                trace = std::make_unique<VertilatedVcdC>();
-                core->trace(trace, 99);
-                trace->open(filename);
+                trace = std::make_unique<VerilatedVcdC>();
+                core->trace(trace.get(), 99);
+                trace->open(filename.data());
             }
         }
         
@@ -70,3 +73,6 @@ namespace tb {
     };
 
 }
+
+
+#endif

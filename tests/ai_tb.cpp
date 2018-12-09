@@ -1,5 +1,5 @@
 #include <testbench.h>
-
+#include <Vaudio_interface.h>
 
 int main(int argc, char** argv) {
     Verilated::commandArgs(argc, argv);
