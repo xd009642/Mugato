@@ -52,10 +52,16 @@ function(verilate TARGET)
     endif()
     get_property(TRACE TARGET ${TARGET} PROPERTY VERILATOR_TRACE SET)
 
+    file(GLOB VERILATOR_SOURCE ${VERILATOR_ROOT}/include/*.cpp)
+    
     if (VERILATE_SYSTEMC)
         set(VERILATE_ARGS ${VERILATE_ARGS} --sc)
+        list(FILTER VERILATOR_SOURCE EXCLUDE REGEX ".*_c.cpp$")
     else()
         set(VERILATE_ARGS ${VERILATE_ARGS} --cc)
+        list(FILTER VERILATOR_SOURCE EXCLUDE REGEX ".*_sc.cpp$")
+        # Don't know what VPI is but it's giving me issues so removing it
+        list(FILTER VERILATOR_SOURCE EXCLUDE REGEX ".*_vpi.cpp$")
     endif()
 
     foreach(D ${VERILATE_INCLUDEDIRS})
@@ -76,7 +82,7 @@ function(verilate TARGET)
         ${VERILATE_ARGS} ${VERILATE_SOURCES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-    message(INFO " Executed process ${VERILATOR_ROOT}")
+    message(INFO " Executed process ${VERILATOR_SOURCE}")
 
     target_include_directories(${TARGET} PUBLIC
         ${DIR} 
@@ -87,7 +93,6 @@ function(verilate TARGET)
     # So all the recommended verilator stuff has you include the source and build it
     # instead of using it like a library. So I work under the assumption everyone
     # is doing that with their installs..
-    file(GLOB VERILATOR_SOURCE ${VERILATOR_ROOT}/include/*.cpp)
 
     message(INFO " ${VSRCS}")
     target_sources(${TARGET} PUBLIC

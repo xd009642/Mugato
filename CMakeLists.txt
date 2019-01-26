@@ -5,6 +5,7 @@ project(tests)
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 find_package(verilator)
+
 if(NOT verilator_FOUND)
     message(FATAL_ERROR "Verilator was not found. Consider setting the VERILATOR_ROOT environment variable")
 endif()
