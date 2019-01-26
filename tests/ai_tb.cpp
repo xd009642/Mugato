@@ -6,9 +6,10 @@ int main(int argc, char** argv) {
     tb::testbench<Vaudio_interface> dut;
 
     dut.open_trace("audiointerface.vcd");
-
-    while(!dut.done()) {
+    int update_limit = 100;
+    while(!dut.done() && update_limit) {
         dut.tick();
+        update_limit--;
     }
     return 0;
 }

@@ -82,7 +82,6 @@ function(verilate TARGET)
         ${VERILATE_ARGS} ${VERILATE_SOURCES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-    message(INFO " Executed process ${VERILATOR_SOURCE}")
 
     target_include_directories(${TARGET} PUBLIC
         ${DIR} 
@@ -94,7 +93,6 @@ function(verilate TARGET)
     # instead of using it like a library. So I work under the assumption everyone
     # is doing that with their installs..
 
-    message(INFO " ${VSRCS}")
     target_sources(${TARGET} PUBLIC
         ${VSRCS}
         ${VERILATOR_SOURCE}
