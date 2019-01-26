@@ -47,6 +47,14 @@ travis to automate the testing of IP blocks as GHDL takes an age to run on my
 machine. UVM would be better but I want to spend my time designing and this is
 more attainable for me.
 
+## Verilator
+
+Given lack of support for cmake with verilator I've taken the 
+verilator-config.cmake from this
+[verilator PR](https://github.com/patstew/verilator/tree/python). I've also
+modified it to get it to work as it relies on some changes to the verilator 
+source to work.
+
 ## License
 Mugato  is currently licensed under the terms of both the MIT license and the
 Apache License (Version 2.0). See LICENSE-MIT and LICENSE-APACHE for more

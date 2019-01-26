@@ -76,3 +76,5 @@ _ngo/
 _xmsgs/
 
 obj_dir/
+build/
+*.swp
