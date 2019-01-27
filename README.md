@@ -8,17 +8,18 @@ a sci-fi name? Also, it sounds a bit like legato!
 
 ## Development environment
 As the Mojo uses a Xilinx Spartan 6 FPGA I'm using Xilinx's ISE as an IDE. I'm
-also developing this using VHDL instead of Verilog or Lucid, partially because
-of some past experience, partially because I love strong typesystems. 
+also developing this using Verilog. 
 
-Because the Mojo-IDE only supports Verilog or Lucid projects I'm generating
-everything in ISE and using 
+Currently, instead of using the Mojo IDE I'm generating everything in ISE and using 
 [mojo-loader](https://embeddedmicro.com/pages/mojo-loader) to program the board.
 
 For the eventual CAD design I plan on using FreeCAD to create models which I'll
 print with my own Prusa-i3 clone.
 
 ## Debugging & Testing
+
+Ignore the below I'm switching to Verilator! Eventually the scripts folder will
+provide everything needed.
 
 Debugging the synthesiser via simulation is harder than it would be if I paid
 for tools such as Questa, or were using a Vivado compatible chip. For debugging
@@ -45,6 +46,14 @@ It's my eventual aim to make checkers in the testbench and then make use of
 travis to automate the testing of IP blocks as GHDL takes an age to run on my
 machine. UVM would be better but I want to spend my time designing and this is
 more attainable for me.
+
+## Verilator
+
+Given lack of support for cmake with verilator I've taken the 
+verilator-config.cmake from this
+[verilator PR](https://github.com/patstew/verilator/tree/python). I've also
+modified it to get it to work as it relies on some changes to the verilator 
+source to work.
 
 ## License
 Mugato  is currently licensed under the terms of both the MIT license and the

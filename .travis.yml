@@ -3,13 +3,6 @@ sudo: required
 addons:
   apt:
     packages:
-    - gnat
+    - verilator
 script:
-- wget https://github.com/ghdl/ghdl/releases/download/v0.35/ghdl-0.35-llvm-3.8-ubuntu14.tgz
-- tar xzf ghdl-0.35-llvm-3.8-ubuntu14.tgz
-- export PATH=$PWD/bin:$PATH
-- ghdl -i tests/*.vhd  src/*.vhd 
-- ghdl --gen-makefile test_driver > makefile
-- make
-- ghdl -r test_driver --stop-time=200ns
-
+- scripts/generate_tests.sh
