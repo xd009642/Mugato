@@ -12,12 +12,10 @@ if(NOT verilator_FOUND)
 endif()
 
 set(TEST_SOURCE
-    tests/ai_tb.cpp)
+    tests/audio_interface_tests.cpp)
 
 include_directories(tests ${Boost_INCLUDE_DIRS})
 
-add_executable(test_main ${TEST_SOURCE})
-
-target_link_libraries(test_main ${Boost_LIBRARIES})
-
-verilate(test_main TRACE SOURCES src/audio_interface.v)
+add_executable(audio_interface_tests ${TEST_SOURCE})
+target_link_libraries(audio_interface_tests ${Boost_LIBRARIES})
+verilate(audio_interface_tests TRACE SOURCES src/audio_interface.v)

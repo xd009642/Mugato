@@ -26,6 +26,13 @@ namespace tb {
                 trace->open(filename.data());
             }
         }
+
+        virtual void close_trace() {
+            if(trace) {
+                trace->close();
+            }
+            trace.reset();
+        }
         
         //! Resets the core
         virtual void reset() {
@@ -63,6 +70,15 @@ namespace tb {
         virtual bool done() {
             return Verilated::gotFinish();
         }
+
+        const T& ip_core() const {
+            return *core;
+        }
+
+        T& ip_core() {
+            return *core;
+        }
+
     protected:
         //! Pointer to the IP core under test
         std::unique_ptr<T> core;
