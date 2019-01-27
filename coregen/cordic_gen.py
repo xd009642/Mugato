@@ -83,7 +83,7 @@ parser.add_argument('--stages', '-s', help='Number of stages in the CORDIC proce
 parser.add_argument('--phasebits', '-p', help='Number of bits used to store phase values', type=int, default = 15)
 parser.add_argument('--out-width', '-ow', help='Output width', type=int, default=5)
 parser.add_argument('--in-width', '-iw', help='Input data width', type=int, default=3)
-parser.add_argument('--out', '-o', help='Output filename', type=str, default='CORDIC.vhd')
+parser.add_argument('--out', '-o', help='Output filename', type=str, default='CORDIC.v')
 
 args = parser.parse_args()
 
