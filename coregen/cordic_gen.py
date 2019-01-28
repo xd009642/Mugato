@@ -1,101 +1,84 @@
 import argparse
-from myhdl import *
-from math import atan2, pi
+from math import atan2, pi, log2, floor
+
+from veriloggen import *
+
+def cordic_stages(phasebits, stages):
+    mod = Module('cordic_update')
+    clk = mod.Input('clk')
+    rst = mod.Input('reset')
+    out = mod.OutputReg('sin', width=phasebits)
+    i = mod.Reg('index', floor(log2(phasebits-1)+1))
+
+    x = mod.Reg('x', width=phasebits+1, length=stages, initval=0)
+    y = mod.Reg('y', width=phasebits+1, length=stages, initval=0)
+    p = mod.Reg('p', width=phasebits+1, length=stages, initval=0)
+    
 
 
-@block 
-def cordic_block(clk, rst, x_in, y_in, z_in, x_out, y_out, z_out):
-    pass
+    return mod
 
-@block
-def cordic_gen(clk, rst, phase, start, sinout, done, phasebits, stages):
-
+def create_phase_table(module, stages, phasebits, wire_name='phase_table'):
     phases = [atan2(1, 2**i) for i in range(stages)]
     phases = tuple([int(x * (4.0 * (1<<(phasebits-2)))/(2.0*pi)) for x in phases])
+    phase_table = module.Wire(wire_name, width=phasebits, length=stages, value=phases)
+    for (wire, phase) in zip(phase_table, phases):
+        wire.assign(phase)
+
+
+def make_cordic(name, phasebits, stages):
+    mod = Module(name)
+
+    clk = mod.Input('clk')
+    rst = mod.Input('reset')
+    enable = mod.Input('en')
+    ready = mod.OutputReg('done', initval=0)
+    data = mod.OutputReg('sin', width=phasebits, initval=0)
+
+    phase = mod.Reg('phase', phasebits, initval = 0)
+    x = mod.Reg('x', width=phasebits+1, length=stages, initval=0)
+    y = mod.Reg('y', width=phasebits+1, length=stages, initval=0)
+    p = mod.Reg('p', width=phasebits+1, length=stages, initval=0)
+    
+    create_phase_table(mod, stages, phasebits)
+        
     # No floats in FPGA land. Keeping the old floats in case I can create comments
     # from them in future for generated VHDL
     # 360/45 = 8 so if we want to split into 45 degree blocks only need 3 bits
     # to represent a block 
+    i = mod.Genvar('i')
+    generator = mod.GenerateFor(i(0), i<stages, i(i+1), scope='pipeline')
+    submod = cordic_stages(phasebits, stages)
+    params = ['index', i]
+    ports = [('clk', clk), ('reset', rst), ('sin', data)]
 
-    x = [Signal(intbv(0)[phasebits+1:]) for i in range(stages)]
-    y = [Signal(intbv(0)[phasebits+1:]) for i in range(stages)]
-    p = [Signal(intbv(0)[phasebits+1:]) for i in range(stages)]
-    phase_top = phase[phasebits:phasebits-3]
-
-
-    @always(clk.posedge)
-    def update():
-        if rst == 1:
-            y[0].next = 0
-            x[0].next = 0
-            p[0].next = 0
-        elif start == 1:
-            if phase[0:3] == 0:
-                x[0].next = phase
-                y[0].next = 0 
-                p[0].next = phase<<1
-            elif phase[0:3] == 1:
-                x[0].next = 0
-                y[0].next = phase
-                p[0].next = (phase-0x10000) <<1
-            elif phase[0:3] == 2:
-                x[0].next = -phase
-                y[0].next = 0
-                p[0].next = (phase-0x10000)<<1
-            elif phase[0:3] == 3:
-                x[0].next = -phase
-                y[0].next = 0
-                p[0].next = (phase-0x20000)<<1
-            elif phase[0:3] == 4:
-                x[0].next = -phase
-                y[0].next = 0
-                p[0].next = (phase-0x20000)<<1
-            elif phase[0:3] == 5:
-                x[0].next = 0
-                y[0].next = -phase
-                p[0].next = (phase-0x30000)<<1
-            elif phase[0:3] == 6:
-                x[0].next = 0
-                y[0].next = -phase
-                p[0].next = (phase-0x30000)<<1
-            elif phase[0:3] == 7:
-                y[0].next = phase
-                x[0].next = 0
-                p[0].next = phase<<1
-            done.next = False
-        else:
-            for s in range(stages):
-                x[s].next = x[s-1] + (y[s-1]>>s) 
-                y[s].next = y[s-1] - (x[s-1]>>s)
-                temp_phase = phases[s-1]
-                p[s].next = p[s-1] + temp_phase
-
-            done.next=True
-        sinout.next = y[-1]
-        
-
-    return update
+    generator.Instance(submod, 'instance', params, ports)
 
 
+    seq = Seq(mod, 'update', clk, rst)
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--stages', '-s', help='Number of stages in the CORDIC processor', type=int, default = 8)
-parser.add_argument('--phasebits', '-p', help='Number of bits used to store phase values', type=int, default = 15)
-parser.add_argument('--out-width', '-ow', help='Output width', type=int, default=5)
-parser.add_argument('--in-width', '-iw', help='Input data width', type=int, default=3)
-parser.add_argument('--out', '-o', help='Output filename', type=str, default='CORDIC.v')
+    seq.If(enable == 1)(
+    ).Else(
+        x.add(y),
+        y.sub(x)
+    )
 
-args = parser.parse_args()
 
-print(args)
+    return mod
 
-clk = Signal(bool(0))
-rst = ResetSignal(0, active=0, async=True)
-start = Signal(bool(0))
-done = Signal(bool(0))
-phase = Signal(intbv(0)[args.phasebits:])
-sinout = Signal(intbv(0)[args.phasebits:])
+if __name__ == '__main__':
 
-concrete_cordic = cordic_gen(clk, rst, phase, start, sinout, done, args.phasebits, args.stages)
-concrete_cordic.convert(hdl='Verilog')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--stages', '-s', help='Number of stages in the CORDIC processor', type=int, default = 8)
+    parser.add_argument('--phasebits', '-p', help='Number of bits used to store phase values', type=int, default = 15)
+    parser.add_argument('--out-width', '-ow', help='Output width', type=int, default=5)
+    parser.add_argument('--in-width', '-iw', help='Input data width', type=int, default=3)
+    parser.add_argument('--out', '-o', help='Output filename', type=str, default='CORDIC.v')
+
+    args = parser.parse_args()
+
+    print(args)
+
+    concrete_cordic = make_cordic('cordic', args.phasebits, args.stages)
+    concrete_cordic.to_verilog(filename='../gen/cordic.v')
 
