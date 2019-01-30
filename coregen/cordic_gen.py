@@ -10,13 +10,14 @@ def create_phase_table(module, stages, phasebits, wire_name='phase_table'):
     phase_table = module.Wire(wire_name, width=phasebits, length=stages, value=phases)
     for (wire, phase) in zip(phase_table, phases):
         wire.assign(phase)
+    return phase_table
 
 
 def make_cordic(name, phasebits, stages):
     mod = Module(name)
 
     clk = mod.Input('clk')
-    rst = mod.Input('reset')
+    rst = mod.Input('rst')
     enable = mod.Input('en')
     angle = mod.Input('angle', width=phasebits)
     done = mod.OutputReg('done')
@@ -33,25 +34,23 @@ def make_cordic(name, phasebits, stages):
     p0 = mod.Reg('p', width=phasebits+1)
     i = mod.Reg('index', floor(log2(phasebits-1)+1))
     
-    create_phase_table(mod, stages, phasebits)
+    phase_table = create_phase_table(mod, stages, phasebits)
         
     # No floats in FPGA land. Keeping the old floats in case I can create comments
     # from them in future for generated VHDL
     # 360/45 = 8 so if we want to split into 45 degree blocks only need 3 bits
     # to represent a block 
 
-    rot_phase = mod.Wire('angle', 2);
-    rot_phase.assign(angle[-1:-2])
     reset_seq = Seq(mod, 'update', clk, rst)
     
-    reset_seq.If(rst == 0)(
+    reset_seq.If(rst == 1)(
         x0(0),
         x1(0),
         y0(0),
         y1(0),
         p0(0),
         p1(0),
-        i(stages),
+        i(0),
         working(0)
     ).Else(
         x1(x0),
@@ -66,50 +65,51 @@ def make_cordic(name, phasebits, stages):
     rotation = Seq(mod, 'calculation', clk, rst)
 
     calculation.If(enable)(
-            Case(angle[-1:-3])(
+            Case(angle[-3:-1])(
             When(0)(
                 x0(1),
                 y0(0),
-                phase(0)
+                p0(angle)
             ),
             When(1)(
                 x0(-1),
                 y0(0),
-                phase(1)
+                p0(angle)
             ),
             When(2)(
                 x0(-1),
                 y0(0),
-                phase(1)
+                p0(angle)
             ),
             When(3)(
                 x0(-1),
                 y0(0),
-                phase(1)
+                p0(angle)
             ),
             When(4)(
                 x0(-1),
                 y0(0),
-                phase(1)
+                p0(angle)
             ),
             When(5)(
                 x0(1),
                 y0(0),
-                phase(1)
+                p0(angle)
             ),
             When(6)(
                 x0(1),
                 y0(0),
-                phase(1)
+                p0(angle)
             ),
             When(7)(
                 x0(1),
                 y0(0),
-                phase(1)
+                p0(angle)
             )
         ),
         i(0),
-        working(1)
+        working(1),
+        done(0)
     ).Elif(AndList(i==stages, working==1))(
         working(0),
         done(1),
@@ -117,12 +117,14 @@ def make_cordic(name, phasebits, stages):
     ).Elif(working==1)(
         i.inc(),
         done(0),
-        If(x0==1)(
-            x0(x0 - (y0>>i)),
-            y0((x0>>i) + y0)
-        ).Else(
+        If(p0[-1]==1)(
             x0(x0 + (y0>>i)),
-            y0((x0>>i) - y0)
+            y0((x0>>i) - y0),
+            p0(p0 + phase_table[i])
+        ).Else(
+            x0(x0 - (y0>>i)),
+            y0((x0>>i) + y0),
+            p0(p0 - phase_table[i])
         )
     )
 

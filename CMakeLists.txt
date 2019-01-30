@@ -19,3 +19,7 @@ include_directories(tests ${Boost_INCLUDE_DIRS})
 add_executable(audio_interface_tests ${TEST_SOURCE})
 target_link_libraries(audio_interface_tests ${Boost_LIBRARIES})
 verilate(audio_interface_tests TRACE SOURCES src/audio_interface.v)
+
+add_executable(cordic_tests tests/cordic_tests.cpp)
+target_link_libraries(cordic_tests ${Boost_LIBRARIES})
+verilate(cordic_tests TRACE SOURCES gen/cordic.v)
