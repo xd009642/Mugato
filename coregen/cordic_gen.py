@@ -32,13 +32,20 @@ def make_cordic(name, phasebits, stages):
     clk = mod.Input('clk')
     rst = mod.Input('reset')
     enable = mod.Input('en')
-    ready = mod.OutputReg('done', initval=0)
-    data = mod.OutputReg('sin', width=phasebits, initval=0)
+    angle = mod.Input('angle', width=phasebits)
+    done = mod.OutputReg('done')
+    sin_out = mod.OutputReg('sin', width=phasebits)
+    cos_out = mod.OutputReg('cos', width=phasebits)
 
-    phase = mod.Reg('phase', phasebits, initval = 0)
-    x = mod.Reg('x', width=phasebits+1, length=stages, initval=0)
-    y = mod.Reg('y', width=phasebits+1, length=stages, initval=0)
-    p = mod.Reg('p', width=phasebits+1, length=stages, initval=0)
+    working = mod.Reg('working')
+    phase = mod.Reg('phase', phasebits)
+    x1 = mod.Reg('x_next', width=phasebits+1)
+    y1 = mod.Reg('y_next', width=phasebits+1)
+    p1 = mod.Reg('p_next', width=phasebits+1)
+    x0 = mod.Reg('x', width=phasebits+1)
+    y0 = mod.Reg('y', width=phasebits+1)
+    p0 = mod.Reg('p', width=phasebits+1)
+    i = mod.Reg('index', floor(log2(phasebits-1)+1))
     
     create_phase_table(mod, stages, phasebits)
         
@@ -46,23 +53,38 @@ def make_cordic(name, phasebits, stages):
     # from them in future for generated VHDL
     # 360/45 = 8 so if we want to split into 45 degree blocks only need 3 bits
     # to represent a block 
-    i = mod.Genvar('i')
-    generator = mod.GenerateFor(i(0), i<stages, i(i+1), scope='pipeline')
-    submod = cordic_stages(phasebits, stages)
-    params = ['index', i]
-    ports = [('clk', clk), ('reset', rst), ('sin', data)]
 
-    generator.Instance(submod, 'instance', params, ports)
-
-
-    seq = Seq(mod, 'update', clk, rst)
-
-    seq.If(enable == 1)(
+    rot_phase = mod.Wire('angle', 2);
+    rot_phase.assign(angle[-1:-2])
+    reset_seq = Seq(mod, 'update', clk, rst)
+    
+    reset_seq.If(rst == 0)(
+        x0(0),
+        x1(0),
+        y0(0),
+        y1(0),
+        p0(0),
+        p1(0),
+        i(stages),
+        working(0)
     ).Else(
-        x.add(y),
-        y.sub(x)
+        x1(x0),
+        y1(y0),
+        p1(p0),
+        sin_out(x1),
+        cos_out(y1),
     )
 
+    calculation = Seq(mod, 'calculation', clk, rst)
+
+    calculation.If(AndList(i==0, working==1))(
+        working(0),
+        done(1),
+        i(stages)
+    ).Elif(working==1)(
+        i.dec(),
+        done(0)
+    )
 
     return mod
 
