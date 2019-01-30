@@ -3,20 +3,6 @@ from math import atan2, pi, log2, floor
 
 from veriloggen import *
 
-def cordic_stages(phasebits, stages):
-    mod = Module('cordic_update')
-    clk = mod.Input('clk')
-    rst = mod.Input('reset')
-    out = mod.OutputReg('sin', width=phasebits)
-    i = mod.Reg('index', floor(log2(phasebits-1)+1))
-
-    x = mod.Reg('x', width=phasebits+1, length=stages, initval=0)
-    y = mod.Reg('y', width=phasebits+1, length=stages, initval=0)
-    p = mod.Reg('p', width=phasebits+1, length=stages, initval=0)
-    
-
-
-    return mod
 
 def create_phase_table(module, stages, phasebits, wire_name='phase_table'):
     phases = [atan2(1, 2**i) for i in range(stages)]
@@ -77,13 +63,67 @@ def make_cordic(name, phasebits, stages):
 
     calculation = Seq(mod, 'calculation', clk, rst)
 
-    calculation.If(AndList(i==0, working==1))(
+    rotation = Seq(mod, 'calculation', clk, rst)
+
+    calculation.If(enable)(
+            Case(angle[-1:-3])(
+            When(0)(
+                x0(1),
+                y0(0),
+                phase(0)
+            ),
+            When(1)(
+                x0(-1),
+                y0(0),
+                phase(1)
+            ),
+            When(2)(
+                x0(-1),
+                y0(0),
+                phase(1)
+            ),
+            When(3)(
+                x0(-1),
+                y0(0),
+                phase(1)
+            ),
+            When(4)(
+                x0(-1),
+                y0(0),
+                phase(1)
+            ),
+            When(5)(
+                x0(1),
+                y0(0),
+                phase(1)
+            ),
+            When(6)(
+                x0(1),
+                y0(0),
+                phase(1)
+            ),
+            When(7)(
+                x0(1),
+                y0(0),
+                phase(1)
+            )
+        ),
+        i(0),
+        working(1)
+    ).Elif(AndList(i==stages, working==1))(
         working(0),
         done(1),
-        i(stages)
+        i(0)
     ).Elif(working==1)(
-        i.dec(),
-        done(0)
+        i.inc(),
+        done(0),
+        If(x0==1)(
+            x0(x0 - (y0>>i)),
+            y0((x0>>i) + y0)
+        ).Else(
+            x0(x0 + (y0>>i)),
+            y0((x0>>i) - y0)
+        )
     )
 
     return mod
