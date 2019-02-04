@@ -3,6 +3,33 @@ from math import atan2, pi, log2, floor
 
 from veriloggen import *
 
+def min_width(max_value):
+    return floor(log2(phasebits-1)+1) 
+
+def cordic_submodule(stages, phase_bits, ww):
+    mod = Module('cordic_inner')
+    clk = mod.Input('clk')
+    x_in = mod.Input('x_in', signed=True, width=ww)
+    y_in = mod.Input('y_in', signed=True, width=ww)
+    p_in = mod.Input('p_in', signed=True, width=phase_bits)
+    p_d = mod.Input('p_d', signed=True, width=phase_bits)
+    shift  = mod.Input('i', width=ww)
+    x_out = mod.Output('x_out', signed=True, width=ww)
+    y_out = mod.Output('y_out', signed=True, width=ww)
+    p_out = mod.Output('p_out', signed=True, width=phase_bits)
+
+    mod.Always(Posedge(clk))(
+        If(p_in[-1])(
+            x_out(x_in + (y_in>>shift)),
+            y_out(y_in - (x_in>>shift)),
+            p_out(p_in + p_d)
+        ).Else(
+            x_out(x_in - (y_in>>shift)),
+            y_out(y_in + (x_in>>shift)),
+            p_out(p_in - p_d)
+        ),
+    )
+    return mod;
 
 def create_phase_table(module, stages, phasebits, wire_name='phase_table'):
     phases = [atan2(1, 2**i) for i in range(stages)]
@@ -12,137 +39,105 @@ def create_phase_table(module, stages, phasebits, wire_name='phase_table'):
         wire.assign(phase)
     return phase_table
 
-
-def make_cordic(name, phasebits, stages):
+def make_cordic(name, phasebits, stages, margin):
     mod = Module(name)
-
     clk = mod.Input('clk')
     rst = mod.Input('rst')
-    enable = mod.Input('en')
-    angle = mod.Input('angle', width=phasebits)
-    done = mod.OutputReg('done')
-    sin_out = mod.OutputReg('sin', width=phasebits)
-    cos_out = mod.OutputReg('cos', width=phasebits)
-
-    working = mod.Reg('working')
-    phase = mod.Reg('phase', phasebits)
-    x1 = mod.Reg('x_next', width=phasebits+1)
-    y1 = mod.Reg('y_next', width=phasebits+1)
-    p1 = mod.Reg('p_next', width=phasebits+1)
-    x0 = mod.Reg('x', width=phasebits+1)
-    y0 = mod.Reg('y', width=phasebits+1)
-    p0 = mod.Reg('p', width=phasebits+1)
-    i = mod.Reg('index', floor(log2(phasebits-1)+1))
+    cordic_angles = create_phase_table(mod, stages, phasebits);
+    ix = mod.Input('x_in', width=phasebits, signed=True)
+    iy = mod.Input('y_in', width=phasebits, signed=True)
+    iph = mod.Input('phase_in', width=phasebits)
+    sin_out = mod.OutputReg('sin', width=phasebits, signed=True)
+    cos_out = mod.OutputReg('cos', width=phasebits, signed=True)
     
-    phase_table = create_phase_table(mod, stages, phasebits)
-        
-    # No floats in FPGA land. Keeping the old floats in case I can create comments
-    # from them in future for generated VHDL
-    # 360/45 = 8 so if we want to split into 45 degree blocks only need 3 bits
-    # to represent a block 
+    ww = phasebits + margin + 1
+    temp_x = mod.Wire('temp_x', width=ww, signed=True)
+    temp_y = mod.Wire('temp_y', width=ww, signed=True)
 
-    reset_seq = Seq(mod, 'update', clk, rst)
+    temp_x.assign( (ix[-1]<<(ww-1)) | (ix<<margin))
+    temp_y.assign( (iy[-1]<<(ww-1)) | (iy<<margin))
     
-    reset_seq.If(rst == 1)(
-        x0(0),
-        x1(0),
-        y0(0),
-        y1(0),
-        p0(0),
-        p1(0),
-        i(0),
-        working(0)
-    ).Else(
-        x1(x0),
-        y1(y0),
-        p1(p0),
-        sin_out(x1),
-        cos_out(y1),
-    )
+    xs = mod.Reg(name='x', width=ww, length=stages+1, signed=True)
+    ys = mod.Reg(name='y', width=ww, length=stages+1, signed=True)
+    phases = mod.Reg(name='phases', width=phasebits, length=stages+1, signed=True)
 
-    calculation = Seq(mod, 'calculation', clk, rst)
-
-    rotation = Seq(mod, 'calculation', clk, rst)
-
-    calculation.If(enable)(
-            Case(angle[-3:-1])(
+    
+    mod.Always(Posedge(clk))(
+        # I'm assuming here it will just truncate off the higher bits..
+        sin_out(xs[-1]>>margin),
+        cos_out(ys[-1]>>margin),
+        # Initial rotations
+        Case(iph[-3:])(
             When(0)(
-                x0(1),
-                y0(0),
-                p0(angle)
+                xs[0](temp_x),
+                ys[0](temp_y),
+                phases[0](iph)
             ),
             When(1)(
-                x0(-1),
-                y0(0),
-                p0(angle)
+                xs[0](-temp_x),
+                ys[0](temp_y),
+                phases[0](iph - (0x01<<(phasebits-2)))
             ),
             When(2)(
-                x0(-1),
-                y0(0),
-                p0(angle)
+                xs[0](-temp_x),
+                ys[0](temp_y),
+                phases[0](iph - (0x01<<(phasebits-2)))
             ),
             When(3)(
-                x0(-1),
-                y0(0),
-                p0(angle)
+                xs[0](-temp_x),
+                ys[0](-temp_y),
+                phases[0](iph - (0x02<<(phasebits-2)))
             ),
             When(4)(
-                x0(-1),
-                y0(0),
-                p0(angle)
+                xs[0](-temp_x),
+                ys[0](-temp_y),
+                phases[0](iph - (0x02<<(phasebits-2)))
             ),
             When(5)(
-                x0(1),
-                y0(0),
-                p0(angle)
+                xs[0](temp_x),
+                ys[0](-temp_y),
+                phases[0](iph - (0x03<<(phasebits-2)))
             ),
             When(6)(
-                x0(1),
-                y0(0),
-                p0(angle)
+                xs[0](temp_x),
+                ys[0](-temp_y),
+                phases[0](iph - (0x3<<(phasebits-2)))
             ),
             When(7)(
-                x0(1),
-                y0(0),
-                p0(angle)
+                xs[0](temp_x),
+                ys[0](temp_y),
+                phases[0](iph)
             )
         ),
-        i(0),
-        working(1),
-        done(0)
-    ).Elif(AndList(i==stages, working==1))(
-        working(0),
-        done(1),
-        i(0)
-    ).Elif(working==1)(
-        i.inc(),
-        done(0),
-        If(p0[-1]==1)(
-            x0(x0 + (y0>>i)),
-            y0((x0>>i) - y0),
-            p0(p0 + phase_table[i])
-        ).Else(
-            x0(x0 - (y0>>i)),
-            y0((x0>>i) + y0),
-            p0(p0 - phase_table[i])
-        )
     )
 
+    # For loop here
+    i = mod.Genvar('i')
+
+    gen_for = mod.GenerateFor(i(0), i<stages, i(i+1), scope='gen_for')
+    cordic_inner = cordic_submodule(stages, phasebits, ww)
+    params = []
+    ports = [('clk', clk), ('x_in', xs[i]), ('y_in', ys[i]), ('p_in', phases[i]),
+            ('x_out', xs[i+1]), ('y_out', ys[i+1]), ('p_out', phases[i+1]), 
+            ('p_d', cordic_angles[i]), ('i', i+1)]
+    
+    gen_for.Instance(cordic_inner, 'generator_exp', params, ports)
+
     return mod
+
+
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--stages', '-s', help='Number of stages in the CORDIC processor', type=int, default = 8)
-    parser.add_argument('--phasebits', '-p', help='Number of bits used to store phase values', type=int, default = 15)
-    parser.add_argument('--out-width', '-ow', help='Output width', type=int, default=5)
-    parser.add_argument('--in-width', '-iw', help='Input data width', type=int, default=3)
+    parser.add_argument('--stages', '-s', help='Number of stages in the CORDIC processor', type=int, default = 15)
+    parser.add_argument('--phasebits', '-p', help='Number of bits used to store phase values', type=int, default = 18)
     parser.add_argument('--out', '-o', help='Output filename', type=str, default='CORDIC.v')
 
     args = parser.parse_args()
 
     print(args)
 
-    concrete_cordic = make_cordic('cordic', args.phasebits, args.stages)
-    concrete_cordic.to_verilog(filename='../gen/cordic.v')
+    cordic2 = make_cordic('cordic', args.phasebits, args.stages, margin=13);
+    cordic2.to_verilog(filename='../gen/cordic.v')
 

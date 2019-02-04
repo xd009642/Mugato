@@ -9,22 +9,16 @@ BOOST_AUTO_TEST_CASE(basic_drive) {
     tb::testbench<Vcordic> dut;
     dut.open_trace("cordic_driven.vcd");
     uint16_t phase = 0;
-    size_t update_limit = 500;
+    size_t update_limit = 1'000'000;
     dut.reset();
     dut.tick();
-    dut.ip_core().angle = 0;
-    dut.ip_core().en = 1;
-    dut.tick();
-    dut.ip_core().en = 0;
+    dut.ip_core().x_in = 0;
+    dut.ip_core().y_in = 1;
+
+    dut.ip_core().phase_in = 0;
     while(!dut.done() && update_limit) {
-        if(dut.ip_core().done) {
-            phase++;
-            dut.ip_core().en = 1;
-            dut.ip_core().angle = phase;
-            dut.tick();
-            dut.ip_core().en = 0;
-        }
         dut.tick();
+        dut.ip_core().phase_in+=100;
         update_limit--;
     }
 }
