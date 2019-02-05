@@ -8,18 +8,19 @@ namespace test = boost::unit_test;
 BOOST_AUTO_TEST_CASE(basic_drive) {
     tb::testbench<Vcordic> dut;
     dut.open_trace("cordic_driven.vcd");
-    uint16_t phase = 0;
-    size_t update_limit = 1'000'000;
+    size_t update_limit = 300'000;
     dut.reset();
     dut.tick();
     dut.ip_core().x_in = 0;
-    dut.ip_core().y_in = 1;
-
-    dut.ip_core().phase_in = 0;
+    dut.ip_core().y_in = 0x26dd4;
+    dut.ip_core().ce = true;
+    dut.ip_core().phase_in = -1000;
     while(!dut.done() && update_limit) {
-        dut.tick();
         dut.ip_core().phase_in+=100;
-        update_limit--;
+        for(int i=0; i<15; i++) {
+            dut.tick();
+            update_limit--;
+        }
     }
 }
 
