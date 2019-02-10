@@ -11,8 +11,10 @@ BOOST_AUTO_TEST_CASE(basic_drive) {
     size_t update_limit = 300'000;
     dut.reset();
     dut.tick();
+    dut.tick();
+    dut.tick();
     dut.ip_core().x_in = 0;
-    dut.ip_core().y_in = 0x26dd4;
+    dut.ip_core().y_in = 0x26dd4>>1;
     dut.ip_core().ce = true;
     dut.ip_core().phase_in = -1000;
     while(!dut.done() && update_limit) {

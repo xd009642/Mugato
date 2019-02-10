@@ -9,18 +9,23 @@ def min_width(max_value):
 def cordic_submodule(stages, phase_bits, ww):
     mod = Module('cordic_inner')
     clk = mod.Input('clk')
+    rst = mod.Input('rst')
     enable = mod.Input('ce')
     x_in = mod.Input('x_in', signed=True, width=ww)
     y_in = mod.Input('y_in', signed=True, width=ww)
-    p_in = mod.Input('p_in', signed=True, width=phase_bits)
-    p_d = mod.Input('p_d', signed=True, width=phase_bits)
+    p_in = mod.Input('p_in', width=phase_bits)
+    p_d = mod.Input('p_d', width=phase_bits)
     shift  = mod.Input('i', width=ww)
     x_out = mod.Output('x_out', signed=True, width=ww)
     y_out = mod.Output('y_out', signed=True, width=ww)
-    p_out = mod.Output('p_out', signed=True, width=phase_bits)
+    p_out = mod.Output('p_out', width=phase_bits)
 
     mod.Always(Posedge(clk))(
-        If(enable)(
+        If(rst)(
+            x_out(0),
+            y_out(0),
+            p_out(0)
+        ).Elif(enable)(
             If(p_in[-1])(
                 x_out(x_in + (y_in>>shift)),
                 y_out(y_in - (x_in>>shift)),
@@ -58,16 +63,19 @@ def make_cordic(name, phasebits, stages, margin):
     temp_x = mod.Wire('temp_x', width=ww, signed=True)
     temp_y = mod.Wire('temp_y', width=ww, signed=True)
 
-    temp_x.assign( (ix[-1]<<(ww-1)) | (ix<<margin))
-    temp_y.assign( (iy[-1]<<(ww-1)) | (iy<<margin))
+    temp_x.assign(Cat(ix[-1], ix, Repeat(Int(0, 1, 2), margin)))
+    temp_y.assign(Cat(iy[-1], iy, Repeat(Int(0, 1, 2), margin)))
     
     xs = mod.Reg(name='x', width=ww, length=stages+1, signed=True)
     ys = mod.Reg(name='y', width=ww, length=stages+1, signed=True)
-    phases = mod.Reg(name='phases', width=phasebits, length=stages+1, signed=True)
+    phases = mod.Reg(name='phases', width=phasebits, length=stages+1)
 
     
     mod.Always(Posedge(clk))(
-        If(enable)(
+        If(rst)(
+            sin_out(0),
+            cos_out(0)
+        ).Elif(enable)(
             # I'm assuming here it will just truncate off the higher bits..
             sin_out(xs[stages-1]>>(margin+1)),
             cos_out(ys[stages-1]>>(margin+1)),
@@ -125,7 +133,7 @@ def make_cordic(name, phasebits, stages, margin):
     params = []
     ports = [('clk', clk), ('ce', enable), ('x_in', xs[i]), ('y_in', ys[i]), ('p_in', phases[i]),
             ('x_out', xs[i+1]), ('y_out', ys[i+1]), ('p_out', phases[i+1]), 
-            ('p_d', cordic_angles[i]), ('i', i)]
+            ('p_d', cordic_angles[i]), ('i', i+1), ('rst', rst)]
     
     gen_for.Instance(cordic_inner, 'generator_exp', params, ports)
 
@@ -142,6 +150,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--stages', '-s', help='Number of stages in the CORDIC processor', type=int, default = 10)
     parser.add_argument('--phasebits', '-p', help='Number of bits used to store phase values', type=int, default = 18)
+    parser.add_argument('--output_width', help='width of the outputted sine/cosine', type=int, default = 18)
+    parser.add_argument('--margin', help='Extra bits used to prevent truncation during working', type=int, default=13)
     parser.add_argument('--out', '-o', help='Output filename', type=str, default='CORDIC.v')
 
     args = parser.parse_args()
@@ -152,6 +162,6 @@ if __name__ == '__main__':
     print('cordic gain is: '+str(cgain))
     print('hex constant is: '+hex(round((2**args.phasebits) / cgain)))
 
-    cordic2 = make_cordic('cordic', args.phasebits, args.stages, margin=13);
+    cordic2 = make_cordic('cordic', args.phasebits, args.stages, margin=args.margin);
     cordic2.to_verilog(filename='../gen/cordic.v')
 

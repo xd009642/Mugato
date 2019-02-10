@@ -8,6 +8,8 @@ else()
     set(VERILATOR_ROOT "/usr/local/share/verilator")
 endif()
 
+message(INFO " Found VERILATOR_ROOT ${VERILATOR_ROOT}")
+
 find_file(VERILATOR_BIN NAMES verilator_bin verilator_bin.exe HINTS ${VERILATOR_ROOT}/bin NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH)
 
 if (NOT VERILATOR_ROOT)
