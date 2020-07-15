@@ -1,0 +1,13 @@
+cradle:
+  cabal:
+    - path: "src"
+      component: "lib:mugato"
+
+    - path: "./bin/Clash.hs"
+      component: "mugato:exe:clash"
+
+    - path: "./bin/Clashi.hs"
+      component: "mugato:exe:clashi"
+
+    - path: "tests"
+      component: "mugato:test:test-library"
